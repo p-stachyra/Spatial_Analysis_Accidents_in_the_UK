@@ -1,6 +1,7 @@
 import pandas as pd
 
 from DatasetCleaning import DatasetCleaning
+from PopulationData import PopulationData
 
 # main driver class
 class Main:
@@ -13,6 +14,12 @@ class Main:
         dc.optimizeDatatypes()
         dc.saveDataset("Accidents_UK")
         print(dc.dataset.dtypes)
+
+        population_data = PopulationData("population_data.csv", 2005, 2017)
+        population_data.saveAnnualRecords(["laname21", "ladcode21"], "data")
+        population_data.getPopulationsDataFrames(["laname21", "ladcode21"])
+        dataframes = population_data.population_dataframes
+        print(dataframes[0].head())
 
 
 if __name__ == "__main__":
