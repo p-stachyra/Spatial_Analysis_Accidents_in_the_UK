@@ -187,25 +187,24 @@ class DataPreprocessing:
 
         # Define aggregation scheme (dictionary) based on one of yearly datasets
         one_hot = pd.get_dummies(dfs_agg[0], columns=self.cat_attributes)
-        to_sum = [x for x in list(one_hot.columns) if x in self.cat_attributes]
+        to_sum = [x for x in list(one_hot.columns) if x not in self.group_attributes + self.num_attributes]
         agg_dict = dict(zip(to_sum, ["sum"] * len(to_sum)))
         agg_dict.update(dict(zip(self.group_attributes, ["first"] * 3)))
 
-        # Store aggregated data
-        if self.print_progress:
-            print("Saving aggregated data")
+        # Aggregate data
         uk_crs = CRS("EPSG:27700")
-        for i, d in enumerate(dfs_agg):
-            # print(i, d.shape, y)
-            buffer = pd.get_dummies(d, columns=self.cat_attributes)
-            buffer = buffer.groupby("index").agg(agg_dict)
-            dfs_agg[i] = gpd.GeoDataFrame(buffer, crs=uk_crs, geometry="geometry")
-        # buffer = None
+        for i in range(len(dfs_agg)):
+            one_hot = pd.get_dummies(dfs_agg[i], columns=self.cat_attributes)
+            dfs_agg[i] = gpd.GeoDataFrame(
+                one_hot.groupby("index").agg(agg_dict), crs=uk_crs, geometry="geometry"
+            )
 
         # Save aggregated data
         if save:
             # if not os.path.isdir(self.output_dir):
             #     os.mkdir(self.output_dir)
+            if self.print_progress:
+                print("Saving aggregated data")
             for d, y in tqdm(zip(dfs_agg, years)):
                 d.to_file(self.main_dir + self.data_dir + f"aggregated_{y}.gpkg", driver="GPKG")
 

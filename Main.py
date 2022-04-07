@@ -21,7 +21,7 @@ class Main:
         dp.formatVariables()
         dp.geoTransform()
         dp.sjoinDistricts()
-        dp.aggregateDistricts(save=True)
+        dp.aggregateDistricts(save=False)
 
         population_data = PopulationData("data/population_data.csv", 2005, 2017)
         population_data.saveAnnualRecords(["laname21", "ladcode21"], "data")
