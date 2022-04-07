@@ -1,8 +1,0 @@
-.gitignore
-.ipynb_checkpoints
-*/.ipynb_checkpoints/*
-.idea
-*/.idea/*
-__pycache__/
-.DS_Store
-*/.DS_Store
