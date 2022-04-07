@@ -19,7 +19,7 @@ class DatasetCleaning:
 
     def reportMissingValues(self):
         # get number of nans per column
-        with open("Missing-values-report.txt", 'w') as fh:
+        with open("../Missing-values-report.txt", 'w') as fh:
             fh.write("Missing Values in the dataset:\n")
             for column in self.dataset.columns:
                 n_nans = self.dataset[column].isnull().sum()
@@ -47,5 +47,5 @@ class DatasetCleaning:
                     self.dataset[column] = self.dataset[column].astype("uint16")
 
     def saveDataset(self, filename):
-        self.dataset.to_csv(f"Optimized_{filename}.csv")
+        self.dataset.to_csv(f"data/Optimized_{filename}.csv")
 
