@@ -1,7 +1,7 @@
 import pandas as pd
 
-from Spatial_Analysis_Accidents_in_the_UK.scripts.DatasetCleaning import DatasetCleaning
-from Spatial_Analysis_Accidents_in_the_UK.scripts.PopulationData import PopulationData
+from modules.DatasetCleaning import DatasetCleaning
+from modules.PopulationData import PopulationData
 
 # main driver class
 class Main:
@@ -12,7 +12,7 @@ class Main:
         dc.reportMissingValues()
         dc.removeMissingValues()
         dc.optimizeDatatypes()
-        dc.saveDataset("Accidents_UK")
+        dc.splitDataset(dataset, save=True)
         print(dc.dataset.dtypes)
 
         population_data = PopulationData("data/population_data.csv", 2005, 2017)

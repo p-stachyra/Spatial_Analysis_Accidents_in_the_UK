@@ -2,7 +2,6 @@ Accident_Index
 1st_Road_Class
 Accident_Severity
 Carriageway_Hazards
-Junction_Control
 Junction_Detail
 Light_Conditions
 Local_Authority_(District)
