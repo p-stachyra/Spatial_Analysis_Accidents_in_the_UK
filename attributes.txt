@@ -1,4 +1,6 @@
 Accident_Index
+Latitude
+Longitude
 1st_Road_Class
 Accident_Severity
 Carriageway_Hazards

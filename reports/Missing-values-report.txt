@@ -1,5 +1,7 @@
 Missing Values in the dataset:
 Accident_Index : 0
+[ MISSING VALUES ] Latitude : 174. Ratio to all records: 0.0
+[ MISSING VALUES ] Longitude : 175. Ratio to all records: 0.0
 1st_Road_Class : 0
 Accident_Severity : 0
 Carriageway_Hazards : 0
