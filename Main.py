@@ -16,18 +16,24 @@ class Main:
         dc.removeMissingValues()
         dc.optimizeDatatypes()
         dc.splitDataset()
-        print(dc.dataset.dtypes)
-        print("Shapes")
-        print("General dataset shape:", dc.dataset.shape)
-        print("Fragmented dataset shape:", pd.concat(dc.fragmented_dataset).shape)
-        dc.saveFragmentedDataset("data", "Fragmented_UK_Accidents")
-        assembler = AssembleDataset("Fragmented", "data")
-        assembler.assembleFromCSVFiles()
-        optimized_dataset = assembler.dataset
-        print("Reassembled dataset shape:", optimized_dataset.shape)
-        optimized_dataset.drop(columns=["Unnamed: 0"], inplace=True)
-        print(optimized_dataset.columns)
-        print(optimized_dataset["Local_Authority_(District)"].value_counts())
+        # print(dc.dataset.dtypes)
+        # print("Shapes")
+        # print("General dataset shape:", dc.dataset.shape)
+        # print("Fragmented dataset shape:", pd.concat(dc.fragmented_dataset).shape)
+        # dc.saveFragmentedDataset("data", "Fragmented_UK_Accidents")
+        # assembler = AssembleDataset("Fragmented", "data")
+        # assembler.assembleFromCSVFiles()
+        # optimized_dataset = assembler.dataset
+        # print("Reassembled dataset shape:", optimized_dataset.shape)
+        # optimized_dataset.drop(columns=["Unnamed: 0"], inplace=True)
+        # print(optimized_dataset.columns)
+        # print(optimized_dataset["Local_Authority_(District)"].value_counts())
+
+        dp = DataPreprocessing(dc.dataset, print_progress=True)
+        dp.formatVariables()
+        dp.geoTransform()
+        dp.sjoinDistricts()
+        dp.aggregateDistricts(save=True)
 
         # TODO
         # as we are not able to upload the Accidents_Information file anyway,
@@ -36,12 +42,6 @@ class Main:
         # this is the same dataset as the Accidents_Information, but with selected attributes (which are in
         # attributes.txt) and with optimal data types.
         # pass this object to the DataPreprocessing class
-
-        # dp = DataPreprocessing(print_progress=True)
-        # dp.formatVariables()
-        # dp.geoTransform()
-        # dp.sjoinDistricts()
-        # dp.aggregateDistricts(save=False)
 
         # TODO
         # Take the average population across these 12 years and normalize casualties counts with it.

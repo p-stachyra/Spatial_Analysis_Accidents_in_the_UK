@@ -1,39 +1,33 @@
 import sys
 import os
 import pandas as pd
+import numpy as np
 import geopandas as gpd
 from pyproj import CRS
 from tqdm import tqdm
-import re
 
 
 class DataPreprocessing:
-    def __init__(self, districts_path="Local_authorities.shp", attributes_path="attributes.txt",
-                 output_dir="data/", data_dir="data/", print_progress=False):
+    def __init__(self, dataset, districts_path="data/Local_authorities.shp", output_dir="data/", print_progress=False):
         try:
-            self.main_dir = re.sub(r"\\", r"/", os.path.dirname(os.getcwd()))+"/"
-            self.data_dir = data_dir
-            data_files = os.listdir(self.main_dir + data_dir)
-            dfs_list = list(filter(re.compile("Optimized_UK").match, data_files))
-            dfs_list = [self.main_dir+data_dir + x for x in dfs_list]
-            li = []
+
             self.print_progress = print_progress
             if self.print_progress:
-                print("Loading optimized data")
-            for f in dfs_list:
-                li.append(pd.read_csv(f, index_col=0, header=0))
-            self.accidents_df = pd.concat(li, axis=0, ignore_index=True)
+                print("Loading dataset")
 
-            self.districts = gpd.read_file(self.main_dir+data_dir+districts_path)
-            self.attributes = []
-            with open(self.main_dir+attributes_path, 'r') as fh:
-                for line in fh.readlines():
-                    attribute = line.strip()
-                    self.attributes.append(attribute)
-            drop_attributes = ["Accident_Index", "Junction_Control", "Local_Authority_(District)"]
-            self.attributes = [x for x in self.attributes if x not in drop_attributes]
+            # Load accidents dataset from memory
+            self.accidents_df = dataset
+
+            # Read local authorities (districts) data
+            self.districts = gpd.read_file(districts_path)
+
+            # Store Lat and Lang attribute names for GeoDataFrame creation
             self.lat_lng = ["Latitude", "Longitude"]
+
+            # Store attribute names for join operation purposes
             self.cat_attributes, self.num_attributes, self.group_attributes = [], [], []
+
+            # Output directory for aggregated data
             self.output_dir = output_dir
 
         except Exception as e:
@@ -42,27 +36,22 @@ class DataPreprocessing:
 
     def formatVariables(self):
         """
-        Reformat the dataframe by excluding unnecessary variables,
-        renaming analyzed ones and merging categorical classes.
+        Reformat merging categorical classes.
         Returns GeoDataFrame with CRS of original data.
         :return: 1 if successful
         """
+
         if self.print_progress:
             print("Formatting variables")
-
-        # Include only analyzed attributes:
-        self.accidents_df = self.accidents_df[self.attributes]
 
         # Rename variables
         self.accidents_df.rename(
             {
-                # "index": "auth_id",
                 "1st_Road_Class": "road_class",
                 "Accident_Severity": "severity",
                 "Carriageway_Hazards": "hazards",
                 "Junction_Detail": "junction",
                 "Light_Conditions": "dark",
-                # "Local_Authority_(District)": "auth",
                 "Number_of_Casualties": "casualties",
                 "Number_of_Vehicles": "vehicles",
                 "Road_Surface_Conditions": "wet",
@@ -80,8 +69,6 @@ class DataPreprocessing:
         # Reformat variables
         self.accidents_df.replace(
             {
-                # "road_class": {"A(M)": 'A', "Motorway": 'A', "Unclassified": np.nan},
-                # for now leaving road class as it is
                 "road_class": {'A': 0, 'B': 1, 'C': 2, "A(M)": 0, "Motorway": 0, "Unclassified": 3},
                 "severity": {"Slight": 0, "Serious": 1, "Fatal": 2},
                 "hazards": {"None": 0},
@@ -99,7 +86,6 @@ class DataPreprocessing:
         self.accidents_df.loc[self.accidents_df["hazards"] != 0, "hazards"] = 1
         self.accidents_df.loc[self.accidents_df["junction"] != 0, "junction"] = 1
         self.accidents_df.loc[self.accidents_df["dark"] != 0, "dark"] = 1
-        # For now assigning 5 or more vehicles to one class:
         self.accidents_df.loc[self.accidents_df["vehicles"] >= 5, "vehicles"] = 5
         self.accidents_df.loc[self.accidents_df["wet"] != 0, "wet"] = 1
         self.accidents_df.loc[
@@ -117,7 +103,7 @@ class DataPreprocessing:
 
         self.accidents_df.dropna(subset="speed", inplace=True)
 
-        return 1
+        return 0
 
     def geoTransform(self):
         """
@@ -126,11 +112,17 @@ class DataPreprocessing:
         """
         if self.print_progress:
             print("Transforming to GeoDataFrame")
+
+        # The data originally comes from epsg 4326
         crs = CRS("EPSG:4326")
-        # geometry = [Point(x,y) for x,y in zip(df['longitude'], df['latitude'])]
+
+        # Read latitude and longitude from attributes
         geometry = gpd.points_from_xy(self.accidents_df[self.lat_lng[1]], self.accidents_df[self.lat_lng[0]])
+
+        # Overwrite existing dataset
         self.accidents_df = gpd.GeoDataFrame(self.accidents_df, crs=crs, geometry=geometry)
-        return 1
+
+        return 0
 
     def sjoinDistricts(self):
         """
@@ -139,14 +131,15 @@ class DataPreprocessing:
         """
         if self.print_progress:
             print("Joining with Local Authorities data")
-        # self.districts.plot(figsize=(10, 6))
-        # print(self.districts.shape)
+
+        # Spatial join of accident points (reprojected)
         self.accidents_df = self.accidents_df.to_crs(27700).sjoin(
             self.districts[["geometry", "LAD21NM"]], how="right", predicate="within"
         )
 
         # Set indices, drop nans, rename some of the columns
         self.accidents_df.rename({"LAD21NM": "auth"}, axis=1, inplace=True)
+        # Drop nans as we performed the right outer join
         self.accidents_df.dropna(subset=["index_left"], inplace=True)
         self.accidents_df['index_left'] = self.accidents_df['index_left'].astype(int)
         self.accidents_df.reset_index(inplace=True)
@@ -155,6 +148,7 @@ class DataPreprocessing:
         self.accidents_df.drop(["Latitude", "Longitude", "time"], axis=1, inplace=True)
         self.accidents_df.sort_index(inplace=True)
 
+        # After spatial join operation, change numerical and categorical datatypes to int
         self.num_attributes = [
             "index", "casualties"
         ]
@@ -168,7 +162,7 @@ class DataPreprocessing:
         self.accidents_df[self.num_attributes + self.cat_attributes] = \
             self.accidents_df[self.num_attributes + self.cat_attributes].astype("int")
 
-        return 1
+        return 0
 
     def aggregateDistricts(self, save=False, return_list=False):
         """
@@ -179,6 +173,7 @@ class DataPreprocessing:
         """
         if self.print_progress:
             print("Aggregating data")
+
         # Create a list of dataframes for each year
         years = list(self.accidents_df.year.unique().astype(int))
         dfs_agg = []
@@ -201,17 +196,22 @@ class DataPreprocessing:
 
         # Save aggregated data
         if save:
-            # if not os.path.isdir(self.output_dir):
-            #     os.mkdir(self.output_dir)
+
+            # Create output directory if doesn't exist
+            if not os.path.isdir(self.output_dir):
+                os.mkdir(self.output_dir)
+
             if self.print_progress:
                 print("Saving aggregated data")
+
+            # Save yearly datasets
             for d, y in tqdm(zip(dfs_agg, years)):
-                d.to_file(self.main_dir + self.data_dir + f"aggregated_{y}.gpkg", driver="GPKG")
+                d.to_file(self.output_dir + f"aggregated_{y}.gpkg", driver="GPKG")
 
         if return_list:
             return dfs_agg
         else:
-            return 1
+            return 0
 
 
 # Example:
