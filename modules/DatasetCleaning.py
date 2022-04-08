@@ -131,6 +131,10 @@ class DatasetCleaning:
 
         try:
             for column in self.dataset.columns:
+                # do not apply datatype change for geospatial information: longitude and latitude
+                if ((column == "Latitude") | (column == "Longitude")):
+                    continue
+
                 datatype = self.dataset[column].dtypes
                 if datatype != "object":
                     minimal = self.dataset[column].min()

@@ -32,7 +32,7 @@ class Main:
         # TODO
         # as we are not able to upload the Accidents_Information file anyway,
         # use the dataset already in memory
-        # dc.dataset
+        # dc.dataset: the object in memory optimized, current dataset
         # this is the same dataset as the Accidents_Information, but with selected attributes (which are in
         # attributes.txt) and with optimal data types.
         # pass this object to the DataPreprocessing class
