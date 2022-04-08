@@ -52,7 +52,7 @@ class Main:
         population_df = nt.mergePopulationFiles()
         aggrData, aggCols = nt.aggregateData("geometry", "auth", ["Accident_Index", "Local_Authority_(District)", "year",
                                                                   "index"])
-        nt.normalize_gdf(population_df, aggrData, aggCols)
+        nt.normalize(population_df, aggrData, aggCols)
 
         # population_data = PopulationData("data/population_data.csv", 2005, 2017)
         # population_data.saveAnnualRecords(["laname21", "ladcode21"], "data")

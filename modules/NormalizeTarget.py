@@ -9,6 +9,7 @@ class NormalizeTarget:
         self.dir = dir
         self.aggregatedData = []
         self.target = target
+        self.norm_df = None
 
         for filename in os.listdir(self.dir):
             if filename.startswith('aggregated'):
@@ -50,12 +51,11 @@ class NormalizeTarget:
         return gdf_aggr, agg_cols
 
 
-    def normalize_gdf(self, population, aggrGdf, cols):
+    def normalize(self, population, aggrGdf, cols):
         # Merge accidents data with population data, normalize attributes
-
-        normalized_gdf = aggrGdf.merge(population, on="auth", how="inner")
-        normalized_gdf[cols] = normalized_gdf[cols].apply(lambda x: x / (normalized_gdf["population"] / 10000))
-        gpd.GeoDataFrame(normalized_gdf, geometry="geometry", crs=CRS("EPSG:27700")).to_file(self.dir+"normalized.gpkg",
+        self.norm_df = aggrGdf.merge(population, on="auth", how="inner")
+        self.norm_df[cols] = self.norm_df[cols].apply(lambda x: x / (self.norm_df["population"] / 10000))
+        gpd.GeoDataFrame(self.norm_df, geometry="geometry", crs=CRS("EPSG:27700")).to_file(self.dir+"normalized.gpkg",
                                                                                             driver="GPKG")
 
 
