@@ -53,12 +53,15 @@ class Main:
         aggrData, aggCols = nt.aggregateData("geometry", "auth", ["Accident_Index", "Local_Authority_(District)", "year",
                                                                   "index"])
         nt.normalize(population_df, aggrData, aggCols)
+        normalized = nt.norm_df
+        print(normalized.columns)
 
         # population_data = PopulationData("data/population_data.csv", 2005, 2017)
         # population_data.saveAnnualRecords(["laname21", "ladcode21"], "data")
         # population_data.getPopulationsDataFrames(["laname21", "ladcode21"])
         # dataframes = population_data.population_dataframes
         #print(dataframes[0].head())
+
 
 
 if __name__ == "__main__":
