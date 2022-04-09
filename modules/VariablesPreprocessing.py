@@ -184,12 +184,14 @@ class DataPreprocessing:
         one_hot = pd.get_dummies(dfs_agg[0], columns=self.cat_attributes)
         to_sum = [x for x in list(one_hot.columns) if x not in self.group_attributes + self.num_attributes]
         agg_dict = dict(zip(to_sum, ["sum"] * len(to_sum)))
+        agg_dict["casualties"] = "sum"
         agg_dict.update(dict(zip(self.group_attributes, ["first"] * 3)))
 
         # Aggregate data
         uk_crs = CRS("EPSG:27700")
         for i in range(len(dfs_agg)):
             one_hot = pd.get_dummies(dfs_agg[i], columns=self.cat_attributes)
+            one_hot["casualties"] = self.accidents_df["casualties"]
             dfs_agg[i] = gpd.GeoDataFrame(
                 one_hot.groupby("index").agg(agg_dict), crs=uk_crs, geometry="geometry"
             )
