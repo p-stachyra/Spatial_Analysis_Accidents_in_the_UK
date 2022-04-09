@@ -207,7 +207,9 @@ class DataPreprocessing:
                 print("Saving aggregated data")
 
             # Save yearly datasets
+            print(dfs_agg[0].columns)
             for d, y in tqdm(zip(dfs_agg, years)):
+
                 d.to_file(self.output_dir + f"aggregated_{y}.gpkg", driver="GPKG")
 
         if return_list:
