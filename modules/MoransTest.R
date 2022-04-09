@@ -7,7 +7,8 @@ df = sf::st_read("data/normalized.gpkg")
 w <- poly2nb(df, queen=TRUE)
 w_list <- nb2listw(w, style="W", zero.policy = T)
 
-##### 1. Fit the model ####
+
+##### 1. Fit the model, perform Moran's I test ####
 lm_formula <- casualties ~ road_class_0 + road_class_1 + road_class_2 + road_class_3 + severity_0 +
   severity_1 + severity_2 + hazards_0 + hazards_1 + junction_0 + junction_1 +
   dark_0 + dark_1 + vehicles_1 + vehicles_2 + vehicles_3 + vehicles_4 +
@@ -35,7 +36,8 @@ plot(x = df$s_casualties, y = df$l_s_casualties, main = " Moran Scatterplot of t
 abline(h = 0, v = 0)
 abline(lm(df$l_s_casualties ~ df$s_casualties), lty = 3, lwd = 4, col = "red")
 
-#### 3. Identify Outliers ####
+
+###### 2.1. Identify Outliers #####
 
 # identify(df$s_casualties, df$l_s_casualties, df$auth, cex = 0.8, plot=T)
 df$s_casualties
@@ -49,7 +51,7 @@ df$s_casualties[outliers]
 
 df_clean <- na.omit(df[-outliers,])
 
-#### 4.1 Moran's scatter plot without outliers ####
+###### 2.2 Moran's scatter plot without outliers ####
 plot(x = df_clean$s_casualties, y = df_clean$l_s_casualties, main = " Moran Scatterplot of target variable")
 abline(h = 0, v = 0)
 abline(lm(df_clean$l_s_casualties ~ df_clean$s_casualties), lty = 3, lwd = 4, col = "red")
@@ -64,7 +66,7 @@ df_clean$quad_sig[(df_clean$s_casualties >= 0 & df_clean$l_s_casualties <= 0) & 
 df_clean$quad_sig[(df_clean$s_casualties >= 0 & df_clean$l_s_casualties >= 0) & (na.omit(lmc[, 5][-outliers]) <= 0.05)] <- 4
 df_clean$quad_sig[(df_clean$s_casualties <= 0 & df_clean$l_s_casualties >= 0) & (na.omit(lmc[, 5][-outliers]) <= 0.05)] <- 5 
 
-#### 4.2 Lisa Cluster map without outliers ####
+###### 2.3 Lisa Cluster map without outliers ####
 breaks <- seq(1, 5, 1)
 labels <- c("high-High", "low-Low", "High-Low", "Low-High", "Not Signif.")
 np <- findInterval(df_clean$quad_sig, breaks)
@@ -74,7 +76,7 @@ mtext("Local Moran's I", cex = 1.5, side = 3, line = 1)
 legend("topleft", legend = labels, fill = colors, bty = "n")
 
 
-#### 5. Moran's scatter plot with outliers ####
+###### 2.4 Moran's scatter plot with outliers ####
 plot(x = df$s_casualties, y = df$l_s_casualties, main = " Moran Scatterplot of target variable")
 abline(h = 0, v = 0)
 abline(lm(df$l_s_casualties ~ df$s_casualties), lty = 3, lwd = 4, col = "red")
@@ -87,7 +89,7 @@ df$quad_sig[(df$s_casualties >= 0 & df$l_s_casualties <= 0) & (lmc[, 5] <= 0.05)
 df$quad_sig[(df$s_casualties >= 0 & df$l_s_casualties >= 0) & (lmc[, 5] <= 0.05)] <- 4
 df$quad_sig[(df$s_casualties <= 0 & df$l_s_casualties >= 0) & (lmc[, 5] <= 0.05)] <- 5 
 
-# Plot Lisa cluster map
+###### 2.5 Plot Lisa cluster map with outliers ####
 breaks <- seq(1, 5, 1)
 labels <- c("high-High", "low-Low", "High-Low", "Low-High", "Not Signif.")
 np <- findInterval(df$quad_sig, breaks)
