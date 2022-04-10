@@ -181,7 +181,7 @@ class DataPreprocessing:
             dfs_agg.append(self.accidents_df.loc[self.accidents_df['year'] == y])
 
         # Define aggregation scheme (dictionary) based on one of yearly datasets
-        one_hot = pd.get_dummies(dfs_agg[0], columns=self.cat_attributes)
+        one_hot = pd.get_dummies(dfs_agg[0], columns=self.cat_attributes, drop_first=True)
         to_sum = [x for x in list(one_hot.columns) if x not in self.group_attributes + self.num_attributes]
         agg_dict = dict(zip(to_sum, ["sum"] * len(to_sum)))
         agg_dict["casualties"] = "sum"
@@ -190,13 +190,8 @@ class DataPreprocessing:
         # Aggregate data
         uk_crs = CRS("EPSG:27700")
         for i in range(len(dfs_agg)):
-            one_hot = pd.get_dummies(dfs_agg[i], columns=self.cat_attributes)
+            one_hot = pd.get_dummies(dfs_agg[i], columns=self.cat_attributes, drop_first=True)
             one_hot["casualties"] = self.accidents_df["casualties"]
-            one_hot.drop([
-                "road_class_0", "severity_0", "severity_1", "severity_2",
-                "hazards_0", "junction_0", "dark_0", "vehicles_1",
-                "road_type_0", "special_0", "speed_0", "urban_0", "weather_0"
-            ], axis=1, inplace=True)
             dfs_agg[i] = gpd.GeoDataFrame(
                 one_hot.groupby("index").agg(agg_dict), crs=uk_crs, geometry="geometry"
             )
