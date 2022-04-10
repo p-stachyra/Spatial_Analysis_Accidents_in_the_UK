@@ -192,6 +192,11 @@ class DataPreprocessing:
         for i in range(len(dfs_agg)):
             one_hot = pd.get_dummies(dfs_agg[i], columns=self.cat_attributes)
             one_hot["casualties"] = self.accidents_df["casualties"]
+            one_hot.drop([
+                "road_class_0", "severity_0", "severity_1", "severity_2",
+                "hazards_0", "junction_0", "dark_0", "vehicles_1",
+                "road_type_0", "special_0", "speed_0", "urban_0", "weather_0"
+            ], axis=1, inplace=True)
             dfs_agg[i] = gpd.GeoDataFrame(
                 one_hot.groupby("index").agg(agg_dict), crs=uk_crs, geometry="geometry"
             )
