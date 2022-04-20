@@ -1,7 +1,6 @@
 import sys
 import os
 import pandas as pd
-import numpy as np
 import geopandas as gpd
 from pyproj import CRS
 from tqdm import tqdm
@@ -148,7 +147,7 @@ class DataPreprocessing:
         self.accidents_df.drop(["Latitude", "Longitude", "time"], axis=1, inplace=True)
         self.accidents_df.sort_index(inplace=True)
 
-        # After spatial join operation, change numerical and categorical datatypes to int
+        # After spatial join operation, change numerical and categorical data types to int
         self.num_attributes = [
             "index", "casualties"
         ]
